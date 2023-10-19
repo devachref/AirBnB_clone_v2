@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Fabric script that generates a .tgz archive from the web_static folder
-from fabric.api import local
+from fabric.api import *
 from datetime import datetime
 
 def do_pack():

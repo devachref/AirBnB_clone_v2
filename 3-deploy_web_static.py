@@ -1,12 +1,11 @@
+#!/usr/bin/python3
 from datetime import datetime
-from fabric.api import env, put, run, local
-import os
-
-env.hosts = ['34.224.3.182', '54.237.225.149']
+from fabric.api import local, put, run
 
 def do_pack():
     """
     Creates a .tgz archive from the contents of the web_static folder
+    Returns the path to the created archive or None on failure
     """
     try:
         now = datetime.now()
@@ -14,14 +13,17 @@ def do_pack():
         local("mkdir -p versions")
         local(f"tar -cvzf versions/{archive_name} web_static")
         return f"versions/{archive_name}"
-    except Exception:
+    except Exception as e:
+        print(f"Failed to create archive: {str(e)}")
         return None
 
 def do_deploy(archive_path):
     """
     Distributes an archive to the web servers
+    Returns True on success, False on failure
     """
-    if not os.path.exists(archive_path):
+    if not archive_path or not os.path.exists(archive_path):
+        print("Invalid archive path")
         return False
 
     try:
@@ -40,20 +42,19 @@ def do_deploy(archive_path):
         run(f"ln -s {releases_path}{archive_name}/ /data/web_static/current")
 
         return True
-    except Exception:
+    except Exception as e:
+        print(f"Failed to deploy: {str(e)}")
         return False
 
 def deploy():
     """
     Creates and distributes an archive to the web servers
+    Returns True on success, False on failure
     """
     archive_path = do_pack()
-    if not archive_path:
-        return False
-    return do_deploy(archive_path)
-    # Return False if no archive has been created
-    if not archive_path:
-        return False
+    if archive_path:
+        return do_deploy(archive_path)
+    return False
 
-    # Call the do_deploy(archive_path) function using the new path of the new archive
-    return do_deploy(archive_path)
+if __name__ == "__main__":
+    deploy()
