@@ -1,7 +1,12 @@
-#!/usr/bin/python3
-from datetime import datetime
-from fabric.api import local, put, run
+#!/bin/python3
 
+from datetime import datetime
+from fabric.api import local, put, run, env
+from fabric.tasks import task
+
+env.hosts = ['54.237.49.174', '54.146.60.252']
+
+@task
 def do_pack():
     """
     Creates a .tgz archive from the contents of the web_static folder
@@ -17,6 +22,8 @@ def do_pack():
         print(f"Failed to create archive: {str(e)}")
         return None
 
+
+@task
 def do_deploy(archive_path):
     """
     Distributes an archive to the web servers
@@ -32,13 +39,28 @@ def do_deploy(archive_path):
         releases_path = "/data/web_static/releases/"
         tmp_path = "/tmp/"
 
-        put(archive_path, tmp_path)
+        # Check if the Fabric daemon is running on the remote hosts
+        for host in env.hosts:
+            with Connection(host) as conn:
+                result = conn.run("fab --help")
+                if result.failed:
+                    print(f"The Fabric daemon is not running on host {host}")
+                    return False
+
+        # Create the release directory
         run(f"mkdir -p {releases_path}{archive_name}")
+
+        # Extract the archive
         run(f"tar -xzf {tmp_path}{archive_filename} -C {releases_path}{archive_name}")
-        run(f"rm {tmp_path}{archive_filename}")
+
+        # Move the files to the current directory
         run(f"mv {releases_path}{archive_name}/web_static/* {releases_path}{archive_name}/")
         run(f"rm -rf {releases_path}{archive_name}/web_static")
+
+        # Remove the old current directory
         run("rm -rf /data/web_static/current")
+
+        # Link the new release directory to the current directory
         run(f"ln -s {releases_path}{archive_name}/ /data/web_static/current")
 
         return True
@@ -46,6 +68,8 @@ def do_deploy(archive_path):
         print(f"Failed to deploy: {str(e)}")
         return False
 
+
+@task
 def deploy():
     """
     Creates and distributes an archive to the web servers
@@ -55,6 +79,3 @@ def deploy():
     if archive_path:
         return do_deploy(archive_path)
     return False
-
-if __name__ == "__main__":
-    deploy()
