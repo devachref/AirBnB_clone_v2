@@ -13,6 +13,11 @@ class State(BaseModel, Base):
 
     @property
     def cities(self):
+        """
+        Returns a list of cities associated with the current state.
+
+        :return: A list of City objects.
+        """
         from models import storage
         from models.city import City
         cities_list = []
@@ -20,5 +25,3 @@ class State(BaseModel, Base):
             if city.state_id == self.id:
                 cities_list.append(city)
         return cities_list
-
-
