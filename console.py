@@ -1,4 +1,3 @@
-import re
 #!/usr/bin/python3
 """ Console Module """
 import cmd
@@ -38,7 +37,6 @@ class HBNBCommand(cmd.Cmd):
 
     def precmd(self, line):
         """Reformat command line for advanced command syntax.
-
         Usage: <class name>.<command>([<id> [<*args> or <**kwargs>]])
         (Brackets denote optional fields in usage example.)
         """
@@ -114,45 +112,26 @@ class HBNBCommand(cmd.Cmd):
         """ Overrides the emptyline method of CMD """
         pass
 
-    def do_create(self, arg):
-        """ Creates a new instance of a class with given parameters """
-        args = arg.split(" ")
-        class_name = args[0]
-        params = {}
-
+    def do_create(self, args):
+        """ Create an object of any class"""
         try:
-            class_instance = HBNBCommand.classes[class_name]()
-        except KeyError:
+            if not args:
+                raise SyntaxError()
+            arg_list = args.split(" ")
+            kw = {}
+            for arg in arg_list[1:]:
+                arg_splited = arg.split("=")
+                arg_splited[1] = eval(arg_splited[1])
+                if type(arg_splited[1]) is str:
+                    arg_splited[1] = arg_splited[1].replace("_", " ").replace('"', '\\"')
+                kw[arg_splited[0]] = arg_splited[1]
+        except SyntaxError:
+            print("** class name missing **")
+        except NameError:
             print("** class doesn't exist **")
-            return
-
-        for arg in args[1:]:
-            match = re.match(r"(\w+)=(.*)", arg)
-            if match:
-                key, value = match.groups()
-                if value.startswith('"') and value.endswith('"'):
-                    # Handle string parameter
-                    value = value[1:-1]  # Remove double quotes
-                    value = value.replace("_", " ")
-                elif "." in value:
-                    # Handle float parameter
-                    try:
-                        value = float(value)
-                    except ValueError:
-                        continue  # Skip invalid values
-                else:
-                    # Handle integer parameter
-                    try:
-                        value = int(value)
-                    except ValueError:
-                        continue  # Skip invalid values
-                setattr(class_instance, key, value)
-            else:
-                print("** attribute name missing **")
-                return
-        class_instance.save()
-        print(class_instance.id)
-
+        new_instance = HBNBCommand.classes[arg_list[0]](**kw)
+        new_instance.save()
+        print(new_instance.id)
 
     def help_create(self):
         """ Help information for the create method """
@@ -234,13 +213,11 @@ class HBNBCommand(cmd.Cmd):
             if args not in HBNBCommand.classes:
                 print("** class doesn't exist **")
                 return
-            for k, v in storage.all().items():
-                if k.split('.')[0] == args:
-                    print_list.append(str(v))
+            for k, v in storage.all(HBNBCommand.classes[args]).items():
+                print_list.append(str(v))
         else:
             for k, v in storage.all().items():
                 print_list.append(str(v))
-
         print(print_list)
 
     def help_all(self):

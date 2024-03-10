@@ -1,22 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HBNB</title>
-</head>
-<body>
-    <h1>States</h1>
-    <ul>
-    {% for state in states.values()|sort(attribute="name") %}
-        <li>{{ state.id }}: <B>{{ state.name }}</B>
-            <ul>
-            {% for city in state.cities|sort(attribute="name") %}
-                <li>{{ city.id }}: <B>{{ city.name }}</B></li>
-            {% endfor %}
-            </ul>
-        </li>
-    {% endfor %}
-    </ul>
-</body>
-</html>
+<HTML lang="en">
+    <HEAD>
+        <TITLE>HBNB</TITLE>
+    </HEAD>
+    <BODY>
+        <H1>States</H1>
+        <UL>
+        {% for state in states.values()|sort(attribute="name") %}
+            <LI>{{ state.id }}: <B>{{ state.name }}</B>
+                <UL>
+                {% for city in state.cities|sort(attribute="name") %}
+                    <LI>{{ city.id }}: <B>{{ city.name }}</B></LI>
+                {% endfor %}
+                </UL>
+            </LI>
+        {% endfor %}
+        </UL>
+    </BODY>
+</HTML>
